@@ -1,0 +1,14 @@
+{
+  "name": "local-email-inbox",
+  "version": "1.0.0",
+  "description": "Local Email Inbox for SoloHost",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.7"
+  }
+}

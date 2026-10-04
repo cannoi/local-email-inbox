@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Email Inbox</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>.paf-made-by{position:fixed;right:8px;bottom:8px;width:min(72px,12vw);max-width:12vw;height:auto;object-fit:contain;opacity:.5;background:transparent;padding:0;border:0;box-shadow:none;filter:none;pointer-events:none;z-index:30}</style></head>
+<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+  <!-- Top Header -->
+  <header class="bg-indigo-600 text-white px-6 py-3 flex flex-wrap justify-between items-center shadow-md z-10 shrink-0">
+    <div class="flex items-center space-x-3">
+      <button onclick="toggleSidebar()" class="text-white hover:text-indigo-200 focus:outline-none mr-1" title="Toggle Sidebar">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+      <i class="fa-solid fa-envelope-circle-check text-2xl"></i>
+      <h1 class="text-lg font-bold">Local Email Inbox <span class="text-xs bg-indigo-500 px-2 py-0.5 rounded">SoloHost</span></h1>
+    </div>
+    <div class="flex items-center space-x-4 mt-2 sm:mt-0">
+      <div class="flex items-center space-x-2">
+        <label for="langSelect" class="text-xs font-medium" data-i18n="language">Language:</label>
+        <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-indigo-700 text-white text-xs rounded px-2 py-1 border border-indigo-500 focus:outline-none">
+          <option value="en" selected>English</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+      </div>
+      <div class="flex items-center space-x-2">
+        <label for="currentUser" class="text-xs font-medium" data-i18n="account">Account:</label>
+        <select id="currentUser" class="bg-indigo-700 text-white text-xs rounded px-3 py-1 border border-indigo-500 focus:outline-none">
+        </select>
+      </div>
+      <button onclick="openNewUserModal()" class="bg-indigo-500 hover:bg-indigo-400 text-white text-xs px-3 py-1.5 rounded font-medium transition flex items-center space-x-1">
+        <i class="fa-solid fa-user-plus"></i> <span data-i18n="createNewAccount">New Account</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Layout (Grid / Flex Row) -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="w-56 lg:w-64 bg-white border-r border-slate-200 p-4 flex flex-col justify-between shrink-0 transition-all duration-300">
+      <div class="space-y-6">
+        <button onclick="openComposeModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-4 rounded-lg font-medium shadow-sm transition flex items-center justify-center space-x-2 text-sm">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span class="sidebar-label" data-i18n="compose">Compose</span>
+        </button>
+        <nav class="space-y-1.5">
+          <button onclick="switchFolder('inbox')" id="btn-folder-inbox" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700">
+            <span class="flex items-center space-x-3"><i class="fa-solid fa-inbox w-5 text-center"></i><span class="sidebar-label" data-i18n="inbox">Inbox</span></span>
+          </button>
+          <button onclick="switchFolder('sent')" id="btn-folder-sent" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">
+            <span class="flex items-center space-x-3"><i class="fa-solid fa-paper-plane w-5 text-center"></i><span class="sidebar-label" data-i18n="sent">Sent</span></span>
+          </button>
+          <button onclick="switchFolder('starred')" id="btn-folder-starred" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">
+            <span class="flex items-center space-x-3"><i class="fa-solid fa-star w-5 text-amber-400 text-center"></i><span class="sidebar-label" data-i18n="starred">Starred</span></span>
+          </button>
+          <button onclick="switchFolder('trash')" id="btn-folder-trash" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">
+            <span class="flex items-center space-x-3"><i class="fa-solid fa-trash w-5 text-center"></i><span class="sidebar-label" data-i18n="trash">Trash</span></span>
+          </button>
+        </nav>
+      </div>
+      <div class="text-[11px] text-slate-400 text-center border-t border-slate-100 pt-3 sidebar-label">
+        SoloHost Internal Secure Mail
+      </div>
+    </aside>
+
+    <!-- Email List Column -->
+    <section class="w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col shrink-0">
+      <div class="p-3 border-b border-slate-200 bg-slate-50/50">
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+          </span>
+          <input type="text" id="searchInput" oninput="filterEmails()" placeholder="Search emails..." data-i18n-placeholder="searchPlaceholder" class="w-full pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-indigo-500 shadow-sm">
+        </div>
+      </div>
+      <div id="emailList" class="flex-1 overflow-y-auto divide-y divide-slate-100">
+        <!-- Email items injected via JS -->
+      </div>
+    </section>
+
+    <!-- Email Content / Reader Column -->
+    <main class="flex-1 bg-slate-50 flex flex-col min-w-0">
+      <div id="emailDetail" class="flex-1 p-6 overflow-y-auto flex items-center justify-center text-slate-400 text-sm">
+        <div class="text-center">
+          <i class="fa-solid fa-envelope-open-text text-4xl mb-2 text-slate-300"></i>
+          <p data-i18n="selectEmailPrompt">Select an email to read</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Compose Modal -->
+  <div id="composeModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
+      <div class="bg-indigo-600 text-white px-5 py-3 flex justify-between items-center">
+        <h3 class="font-semibold text-sm flex items-center space-x-2"><i class="fa-solid fa-pen-to-square"></i> <span data-i18n="newEmail">New Message</span></h3>
+        <button onclick="closeComposeModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="toEmail">To (Email):</label>
+          <input type="email" id="composeReceiver" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" placeholder="user@local">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="subject">Subject:</label>
+          <input type="text" id="composeSubject" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="message">Message:</label>
+          <textarea id="composeBody" rows="6" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+      </div>
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-3">
+        <button onclick="closeComposeModal()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-100 font-medium" data-i18n="cancel">Cancel</button>
+        <button onclick="sendEmail()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm" data-i18n="send">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New User Modal -->
+  <div id="newUserModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col">
+      <div class="bg-indigo-600 text-white px-5 py-3 flex justify-between items-center">
+        <h3 class="font-semibold text-sm flex items-center space-x-2"><i class="fa-solid fa-user-plus"></i> <span data-i18n="createNewAccount">New Account</span></h3>
+        <button onclick="closeNewUserModal()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Email:</label>
+          <input type="email" id="newEmailInput" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" placeholder="name@local">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1" data-i18n="displayName">Display Name:</label>
+          <input type="text" id="newDisplayNameInput" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-indigo-500" placeholder="John Doe">
+        </div>
+      </div>
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end space-x-3">
+        <button onclick="closeNewUserModal()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-100 font-medium" data-i18n="cancel">Cancel</button>
+        <button onclick="createUser()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-sm" data-i18n="create">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUserId = null;
+    let currentFolder = 'inbox';
+    let allEmails = [];
+    let selectedEmailId = null;
+    let currentLang = 'en';
+
+    const translations = {
+      en: {
+        language: 'Language:',
+        account: 'Account:',
+        createNewAccount: 'New Account',
+        compose: 'Compose',
+        inbox: 'Inbox',
+        sent: 'Sent',
+        starred: 'Starred',
+        trash: 'Trash',
+        searchPlaceholder: 'Search emails...',
+        selectEmailPrompt: 'Select an email to read',
+        newEmail: 'New Message',
+        toEmail: 'To (Email):',
+        subject: 'Subject:',
+        message: 'Message:',
+        cancel: 'Cancel',
+        send: 'Send',
+        displayName: 'Display Name:',
+        create: 'Create',
+        reply: 'Reply',
+        delete: 'Delete',
+        from: 'From:',
+        to: 'To:',
+        date: 'Date:'
+      },
+      vi: {
+        language: 'Ngôn ngữ:',
+        account: 'Tài khoản:',
+        createNewAccount: 'Tạo tài khoản',
+        compose: 'Soạn thư',
+        inbox: 'Hộp thư đến',
+        sent: 'Đã gửi',
+        starred: 'Đã gắn sao',
+        trash: 'Thùng rác',
+        searchPlaceholder: 'Tìm kiếm thư...',
+        selectEmailPrompt: 'Chọn một email để đọc',
+        newEmail: 'Tin nhắn mới',
+        toEmail: 'Đến (Email):',
+        subject: 'Tiêu đề:',
+        message: 'Nội dung:',
+        cancel: 'Hủy',
+        send: 'Gửi',
+        displayName: 'Tên hiển thị:',
+        create: 'Tạo',
+        reply: 'Trả lời',
+        delete: 'Xóa',
+        from: 'Từ:',
+        to: 'Đến:',
+        date: 'Ngày:'
+      }
+    };
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) {
+          el.innerText = translations[lang][key];
+        }
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang][key]) {
+          el.placeholder = translations[lang][key];
+        }
+      });
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const labels = document.querySelectorAll('.sidebar-label');
+      if (sidebar.classList.contains('w-16')) {
+        sidebar.classList.remove('w-16');
+        sidebar.classList.add('w-56', 'lg:w-64');
+        labels.forEach(l => l.style.display = 'inline');
+      } else {
+        sidebar.classList.remove('w-56', 'lg:w-64');
+        sidebar.classList.add('w-16');
+        labels.forEach(l => l.style.display = 'none');
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/users');
+        const users = await res.json();
+        const select = document.getElementById('currentUser');
+        select.innerHTML = '';
+        users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.display_name} (${u.email})`;
+          select.appendChild(opt);
+        });
+        if (users.length > 0 && !currentUserId) {
+          currentUserId = users[0].id;
+          select.value = currentUserId;
+          loadEmails();
+        }
+        select.onchange = (e) => {
+          currentUserId = e.target.value;
+          selectedEmailId = null;
+          resetDetailView();
+          loadEmails();
+        };
+      } catch (err) {
+        console.error('Failed to load users', err);
+      }
+    }
+
+    async function loadEmails() {
+      if (!currentUserId) return;
+      try {
+        const res = await fetch(`/api/emails?userId=${currentUserId}&folder=${currentFolder}`);
+        allEmails = await res.json();
+        renderEmailList(allEmails);
+      } catch (err) {
+        console.error('Failed to load emails', err);
+      }
+    }
+
+    function renderEmailList(emails) {
+      const container = document.getElementById('emailList');
+      container.innerHTML = '';
+
+      if (emails.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">No messages</div>`;
+        return;
+      }
+
+      emails.forEach(email => {
+        const isUnread = email.is_read === 0 && currentFolder === 'inbox';
+        const div = document.createElement('div');
+        div.className = `p-3.5 cursor-pointer hover:bg-slate-50 transition border-b border-slate-100 flex items-start space-x-3 ${isUnread ? 'bg-indigo-50/40 font-semibold' : ''} ${selectedEmailId === email.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''}`;
+        
+        const name = currentFolder === 'sent' ? (email.receiver_name || email.receiver_email) : (email.sender_name || email.sender_email);
+        
+        div.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs truncate ${isUnread ? 'text-indigo-900 font-bold' : 'text-slate-800'}">${escapeHtml(name)}</span>
+              <span class="text-[10px] text-slate-400 shrink-0">${formatDate(email.created_at)}</span>
+            </div>
+            <div class="text-xs truncate ${isUnread ? 'text-slate-900 font-semibold' : 'text-slate-700'}">${escapeHtml(email.subject)}</div>
+            <div class="text-[11px] text-slate-400 truncate mt-0.5">${escapeHtml(email.body)}</div>
+          </div>
+          <div class="flex flex-col items-center space-y-2 shrink-0 pt-0.5">
+            <button onclick="event.stopPropagation(); toggleStar(${email.id}, ${email.is_starred})" class="text-xs text-slate-300 hover:text-amber-400">
+              <i class="fa-star ${email.is_starred ? 'fa-solid text-amber-400' : 'fa-regular'}"></i>
+            </button>
+          </div>
+        `;
+        div.onclick = () => selectEmail(email.id);
+        container.appendChild(div);
+      });
+    }
+
+    function filterEmails() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allEmails.filter(e => 
+        (e.subject && e.subject.toLowerCase().includes(keyword)) ||
+        (e.body && e.body.toLowerCase().includes(keyword)) ||
+        (e.sender_email && e.sender_email.toLowerCase().includes(keyword))
+      );
+      renderEmailList(filtered);
+    }
+
+    async function selectEmail(id) {
+      selectedEmailId = id;
+      renderEmailList(allEmails);
+      const email = allEmails.find(e => e.id === id);
+      if (!email) return;
+
+      if (email.is_read === 0 && currentFolder === 'inbox') {
+        await fetch(`/api/emails/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_read: 1 })
+        });
+        email.is_read = 1;
+      }
+
+      const detail = document.getElementById('emailDetail');
+      const name = currentFolder === 'sent' ? (email.receiver_name || email.receiver_email) : (email.sender_name || email.sender_email);
+      
+      detail.innerHTML = `
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 w-full max-w-2xl">
+          <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-800 mb-1">${escapeHtml(email.subject)}</h2>
+              <div class="text-xs text-slate-500">
+                <span class="font-medium text-slate-700">${currentFolder === 'sent' ? 'To:' : 'From:'}</span> ${escapeHtml(name)}
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="toggleStar(${email.id}, ${email.is_starred})" class="p-2 text-slate-400 hover:text-amber-400 transition" title="Star">
+                <i class="fa-star text-base ${email.is_starred ? 'fa-solid text-amber-400' : 'fa-regular'}"></i>
+              </button>
+              <button onclick="moveToTrash(${email.id})" class="p-2 text-slate-400 hover:text-red-500 transition" title="Delete">
+                <i class="fa-solid fa-trash text-base"></i>
+              </button>
+            </div>
+          </div>
+          <div class="text-xs text-slate-400 mb-4">${formatDate(email.created_at)}</div>
+          <div class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">${escapeHtml(email.body)}</div>
+          
+          ${currentFolder !== 'sent' ? `
+            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+              <button onclick="openComposeWithReply('${email.sender_email}', 'Re: ${email.subject}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs px-4 py-2 rounded-lg font-medium transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-reply"></i> <span data-i18n="reply">Reply</span>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      ";
+    }
+
+    function resetDetailView() {
+      const t = translations[currentLang];
+      document.getElementById('emailDetail').innerHTML = `
+        <div class="text-center">
+          <i class="fa-solid fa-envelope-open-text text-4xl mb-2 text-slate-300"></i>
+          <p>${t.selectEmailPrompt}</p>
+        </div>
+      `;
+    }
+
+    function switchFolder(folder) {
+      currentFolder = folder;
+      selectedEmailId = null;
+      document.querySelectorAll('nav button').forEach(btn => {
+        btn.className = "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100";
+      });
+      const activeBtn = document.getElementById(`btn-folder-${folder}`);
+      if (activeBtn) {
+        activeBtn.className = "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700";
+      }
+      resetDetailView();
+      loadEmails();
+    }
+
+    async function toggleStar(id, currentStarred) {
+      const newStarred = currentStarred ? 0 : 1;
+      await fetch(`/api/emails/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_starred: newStarred })
+      });
+      loadEmails();
+      if (selectedEmailId === id) {
+        selectEmail(id);
+      }
+    }
+
+    async function moveToTrash(id) {
+      await fetch(`/api/emails/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'trash' })
+      });
+      selectedEmailId = null;
+      resetDetailView();
+      loadEmails();
+    }
+
+    function openComposeModal() {
+      document.getElementById('composeReceiver').value = '';
+      document.getElementById('composeSubject').value = '';
+      document.getElementById('composeBody').value = '';
+      document.getElementById('composeModal').classList.remove('hidden');
+    }
+
+    function openComposeWithReply(email, subject) {
+      openComposeModal();
+      document.getElementById('composeReceiver').value = email;
+      document.getElementById('composeSubject').value = subject;
+    }
+
+    function closeComposeModal() {
+      document.getElementById('composeModal').classList.add('hidden');
+    }
+
+    async function sendEmail() {
+      const receiver_email = document.getElementById('composeReceiver').value;
+      const subject = document.getElementById('composeSubject').value;
+      const body = document.getElementById('composeBody').value;
+
+      if (!receiver_email || !subject) {
+        alert('Please fill in recipient and subject');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender_id: currentUserId, receiver_email, subject, body })
+        });
+        const data = await res.json();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          closeComposeModal();
+          if (currentFolder === 'sent') loadEmails();
+        }
+      } catch (err) {
+        console.error('Failed to send email', err);
+      }
+    }
+
+    function openNewUserModal() {
+      document.getElementById('newEmailInput').value = '';
+      document.getElementById('newDisplayNameInput').value = '';
+      document.getElementById('newUserModal').classList.remove('hidden');
+    }
+
+    function closeNewUserModal() {
+      document.getElementById('newUserModal').classList.add('hidden');
+    }
+
+    async function createUser() {
+      const email = document.getElementById('newEmailInput').value;
+      const display_name = document.getElementById('newDisplayNameInput').value;
+      if (!email) {
+        alert('Email is required');
+        return;
+      }
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, display_name })
+        });
+        const data = await res.json();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          closeNewUserModal();
+          loadUsers();
+        }
+      } catch (err) {
+        console.error('Failed to create user', err);
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    window.onload = loadUsers;
+  </script>
+<img class="paf-made-by" src="/made-by.png" alt="Made with App Builder — Pi SoloHost"></body>
+</html>

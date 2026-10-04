@@ -1,0 +1,7 @@
+title: "Local Email Inbox"
+eyebrow: SoloHost App
+description: "Tạo ứng dụng email cục bộ trên SoloHost"
+footer_hint: Ready to run on Pi Desktop SoloHost.
+output_file: .env
+after_save: Saved. Start the app from SoloHost.
+fields: []
