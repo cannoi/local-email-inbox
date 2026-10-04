@@ -7,20 +7,20 @@ Tạo ứng dụng email cục bộ trên SoloHost
 
 ## Quality
 {
-  "functionality": "Ứng dụng Local Email Inbox có cấu trúc đầy đủ, bao gồm backend Node.js (server.js) và giao diện front-end (public/index.html) để quản lý hộp thư giả lập, kiểm tra sức khỏe (/health) và các tính năng cơ bản cần thiết.",
-  "security": "Các file cấu hình không chứa bí mật tĩnh (secrets), tuân thủ nguyên tắc bảo mật. Các biến môi trường được xử lý qua file .env và config_options.yml cho SoloHost.",
-  "reliability": "Cấu hình Dockerfile, docker-compose.yml và package.json đúng chuẩn SoloHost, lắng nghe trên 0.0.0.0 và sử dụng PORT biến môi trường (mặc định 8080). Có file kiểm thử (test.js) đảm bảo tính sẵn sàng.",
-  "performance": "Sử dụng stack Node.js nhẹ, không có tài nguyên nặng hay phụ thuộc phức tạp, đảm bảo hiệu năng tối ưu cho môi trường container độc lập.",
-  "documentation": "Tài liệu hướng dẫn đầy đủ với các file README.md, CHANGELOG.md, INSTALL.md và thư mục solohost/ cho việc đóng gói.",
-  "overall": "Dự án đã sẵn sàng, cấu trúc file hoàn chỉnh và tuân thủ chặt chẽ các quy chuẩn của Pi SoloHost.",
+  "action": "reply",
+  "functionality": "Ứng dụng Local Email Inbox đã có cấu trúc đầy đủ bao gồm server backend (Node.js/Express), giao diện frontend quản lý hộp thư, tệp kiểm thử tự động, và đầy đủ tài liệu hướng dẫn cài đặt.",
+  "security": "Đã tuân thủ các quy tắc bảo mật của SoloHost: không lưu trữ thông tin nhạy cảm trong mã nguồn, lắng nghe trên cổng động (process.env.PORT || 8080), không sử dụng quyền root không cần thiết trong Dockerfile và không yêu cầu các mount/network đặc quyền.",
+  "reliability": "Tích hợp sẵn endpoint kiểm tra sức khỏe (/health), cấu hình docker-compose và config_options.yml tuân thủ nghiêm ngặt hợp đồng SoloHost v0.",
+  "performance": "Mã nguồn gọn nhẹ, sử dụng các thư viện chuẩn, không có chu trình nặng gây nghẽn CPU ở tầng ứng dụng.",
+  "documentation": "Đầy đủ các tệp tài liệu chuẩn bị sẵn cho việc triển khai trên SoloHost (INSTALL.md, README.md, solohost/*).",
+  "overall": "Ứng dụng hoàn chỉnh, đáp ứng toàn bộ các tiêu chuẩn kỹ thuật để phát hành.",
   "verdict": "PASS",
   "findings": [
-    "Toàn bộ 23 tệp cần thiết cho một ứng dụng SoloHost chuẩn đã có mặt.",
-    "Điểm cuối kiểm tra sức khỏe (/health) và cổng 8080 được cấu hình chính xác.",
-    "Tuân thủ quy tắc giữ lại huy hiệu và không nhúng secret trong mã nguồn.",
-    "Bộ cấu hình SoloHost bao gồm docker-compose.yml và config_options.yml hợp lệ."
+    "Cấu trúc tệp hoàn chỉnh theo tiêu chuẩn SoloHost.",
+    "Endpoint /health hoạt động chính xác.",
+    "Tài liệu hướng dẫn cài đặt và cấu hình rõ ràng."
   ],
-  "reply": "Đã hoàn tất kiểm tra ứng dụng Local Email Inbox. Dự án đạt tiêu chuẩn chất lượng và an toàn của SoloHost (Verdict: PASS). Bạn có thể tiến hành phát hành hoặc triển khai ngay."
+  "reply": "Đã kiểm tra dự án Local Email Inbox thành công. Ứng dụng đáp ứng đầy đủ các tiêu chuẩn kỹ thuật, bảo mật và vận hành của SoloHost. Kết quả kiểm định: PASS."
 }
 
 ## Install

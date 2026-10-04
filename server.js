@@ -48,7 +48,7 @@ function initDb() {
 
     // Seed initial users if empty
     db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
-      if (row.count === 0) {
+      if (row && row.count === 0) {
         db.run("INSERT INTO users (email, display_name) VALUES ('admin@local', 'System Administrator')");
         db.run("INSERT INTO users (email, display_name) VALUES ('user@local', 'Standard User')");
         db.run("INSERT INTO users (email, display_name) VALUES ('support@local', 'Support Desk')");
@@ -182,9 +182,9 @@ app.patch('/api/emails/:id', (req, res) => {
   }
 
   params.push(id);
-  const query = `UPDATE emails SET ${updates.join(', ')} WHERE id = ?`;
+  const sql = `UPDATE emails SET ${updates.join(', ')} WHERE id = ?`;
 
-  db.run(query, params, function(err) {
+  db.run(sql, params, function(err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -203,5 +203,5 @@ app.delete('/api/emails/:id', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Local Email Inbox server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
